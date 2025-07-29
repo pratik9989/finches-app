@@ -8,6 +8,7 @@ export interface FarmRecordType {
     text_observation: string;
     photo_url: string;
     location: LocationType;
+    status?: string
 }
 
 export type StatusType = "pending" | "synced" | "failed";

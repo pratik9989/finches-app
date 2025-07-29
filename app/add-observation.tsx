@@ -2,23 +2,31 @@ import ImagePicker from '@/components/ImagePicker';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedTextInput } from '@/components/ThemedTextInput';
 import { ThemedView } from '@/components/ThemedView';
+import { submitObservation } from '@/services/apis/reportApi';
 import { useObservationStore } from '@/services/stores';
+import { useNetInfo } from '@react-native-community/netinfo';
 import * as Location from 'expo-location';
 import { useRouter } from "expo-router";
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, KeyboardAvoidingView, ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import uuid from 'react-native-uuid';
 
 export default function AddObservation() {
     const router = useRouter();
+    const { isConnected } = useNetInfo()
     const { addObservation } = useObservationStore();
 
     const [userId, setUserId] = useState("");
+    const [isConnectedState, setIsConnectedState] = useState(isConnected);
     const [textObservation, setTextObservation] = useState("");
     const [photoUri, setPhotoUri] = useState<string | null>(null);
     const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+    useEffect(() => {
+        setIsConnectedState(isConnected)
+    }, [isConnected])
 
     const validate = () => {
         const newErrors: { [key: string]: string } = {};
@@ -61,16 +69,20 @@ export default function AddObservation() {
         }
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!validate()) return;
-        addObservation({
+        const record = {
             observation_id: uuid.v4(),
             user_id: userId,
             text_observation: textObservation,
-            photo_url: "https://www.finches.ai/hubfs/fi_logo_blue.png",
+            photo_url: "https://www.finches.ai/hubfs/fi_logo_blue.png", // static url to avoid photo_uri validation errpr
             location,
-            status: "pending"
-        });
+            status: isConnectedState ? "synced" : "pending"
+        }
+        if (isConnectedState) {
+            await submitObservation(record)
+        }
+        addObservation(record);
         resetForm();
         router.back();
 
@@ -97,7 +109,7 @@ export default function AddObservation() {
                 <ScrollView>
 
                     <SafeAreaView style={styles.container}>
-                        <ThemedText type="title" style={styles.title}>Farm Details</ThemedText>
+                        <ThemedText type="title" style={styles.title}>Details</ThemedText>
 
                         <ThemedTextInput
                             style={styles.input}

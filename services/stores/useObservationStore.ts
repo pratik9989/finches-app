@@ -11,9 +11,8 @@ export const useObservationStore = create<any>()(
                 reports: [],
                 addObservation: async (record: FarmRecordType) => {
                     try {
-                        await submitObservation(record)
                         console.log("record", record)
-                        set((state: any) => ({ reports: [{ ...record, status: "synced" }, ...state.reports] }))
+                        set((state: any) => ({ reports: [record, ...state.reports] }))
                         console.log("record added")
                         alert("Record added successfully")
                     } catch (error) {
@@ -22,6 +21,49 @@ export const useObservationStore = create<any>()(
                         alert("Failed to add new observation")
                     }
                 },
+                updateRecord: (observation_id: string, record: FarmRecordType) => {
+                    console.log("record to update", record)
+                    set((state: any) => ({
+                        reports: state.reports.map((rec: FarmRecordType) =>
+                            rec.observation_id === observation_id ? { ...rec, ...record } : rec
+                        ),
+                    }))
+                },
+                syncObservation: async () => {
+                    try {
+                        const pendingRecords = get().reports.filter(
+                            (record: FarmRecordType) => record.status === 'pending' || record.status === 'failed'
+                        );
+
+                        const syncResults = await Promise.allSettled(
+                            pendingRecords.map(async (record: FarmRecordType) => {
+                                let status = ""
+                                try {
+                                    await submitObservation(record);
+                                    status = "synced"
+                                } catch (error) {
+                                    console.error("Sync failed for record:", record.observation_id, error);
+                                    status = "failed"
+                                } finally {
+                                    // Mark as synced regardless of success/failure
+                                    const updatedRecord = { ...record, status: status };
+                                    console.log("status", updatedRecord)
+                                    get().updateRecord(record.observation_id, updatedRecord);
+                                }
+                            })
+                        );
+
+                        console.log("Record sync complete");
+                        if (pendingRecords.length > 0) {
+                            alert("Records synced successfully");
+                        }
+
+                    } catch (error) {
+                        console.error("Sync error:", error);
+                        alert("Failed to sync observations");
+                    }
+                },
+
                 clearAll: () => set({ reports: [], selectedRecord: null }),
 
             }
