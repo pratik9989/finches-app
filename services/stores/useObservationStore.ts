@@ -1,30 +1,25 @@
+import { FarmRecordType } from "@/utils/api.types";
 import { loadString, remove, saveString } from "@/utils/storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-export type StatusType = "pending" | "success" | "failed";
-interface LocationType {
-    latitude: number;
-    longitude: number;
-}
-interface FarmRecordType {
-    observation_id: string;
-    user_id: string;
-    text_observation: string;
-    photo_url: string;
-    location: LocationType;
-}
+import { submitObservation } from "../apis/reportApi";
+
 export const useObservationStore = create<any>()(
     persist(
         (set: any, get: any) => {
             return {
                 reports: [],
-                addFarmRecord: (record: FarmRecordType) => {
+                addObservation: async (record: FarmRecordType) => {
                     try {
+                        await submitObservation(record)
                         console.log("record", record)
-                        set((state: any) => ({ reports: [...state.reports, record] }))
+                        set((state: any) => ({ reports: [{ ...record, status: "synced" }, ...state.reports] }))
                         console.log("record added")
+                        alert("Record added successfully")
                     } catch (error) {
-                        console.log("error", error)
+                        set((state: any) => ({ reports: [...state.reports, { ...record, status: "failed" }] }))
+                        console.error(error)
+                        alert("Failed to add new observation")
                     }
                 },
                 clearAll: () => set({ reports: [], selectedRecord: null }),

@@ -3,32 +3,31 @@ import { ThemedView } from '@/components/ThemedView';
 import { useObservationStore } from '@/services/stores';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
 import { FlatList, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const isConnected = true;
+// const isConnected = true;
 
 export default function HomeScreen() {
     const { reports, updateRecord } = useObservationStore();
     const router = useRouter();
 
-    useEffect(() => {
-        if (isConnected) {
-            const recordsWithPendingStatus = reports.filter((record: any) => record.status === 'pending');
-            recordsWithPendingStatus.forEach((record: any) => {
-                // Simulate sync call and update status
-                const updatedRecord = { ...record, status: 'success' };
-                updateRecord(record.observation_id, updatedRecord);
-            });
-        }
-    }, [isConnected]);
+    // useEffect(() => {
+    //     if (isConnected) {
+    //         const recordsWithPendingStatus = reports.filter((record: any) => record.status === 'pending');
+    //         recordsWithPendingStatus.forEach((record: any) => {
+    //             // Simulate sync call and update status
+    //             const updatedRecord = { ...record, status: 'synced' };
+    //             updateRecord(record.observation_id, updatedRecord);
+    //         });
+    //     }
+    // }, [isConnected]);
 
     const getStatusColor = (status: string) => {
         switch (status.toLowerCase()) {
             case 'pending':
                 return 'orange';
-            case 'success':
+            case 'synced':
                 return 'green';
             case 'failed':
                 return 'red';

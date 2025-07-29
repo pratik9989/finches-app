@@ -12,7 +12,7 @@ import uuid from 'react-native-uuid';
 
 export default function AddObservation() {
     const router = useRouter();
-    const { addFarmRecord } = useObservationStore();
+    const { addObservation } = useObservationStore();
 
     const [userId, setUserId] = useState("");
     const [textObservation, setTextObservation] = useState("");
@@ -63,11 +63,11 @@ export default function AddObservation() {
 
     const handleSubmit = () => {
         if (!validate()) return;
-        addFarmRecord({
+        addObservation({
             observation_id: uuid.v4(),
             user_id: userId,
-            textObservation,
-            photo_url: photoUri,
+            text_observation: textObservation,
+            photo_url: "https://www.finches.ai/hubfs/fi_logo_blue.png",
             location,
             status: "pending"
         });
